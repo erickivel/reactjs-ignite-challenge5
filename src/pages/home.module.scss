@@ -1,1 +1,39 @@
-// TODO
+.container {
+    button {
+        margin-top: 4rem;
+        margin-bottom: 5rem;
+        
+        border: 0;
+        background: transparent;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--pink-500);
+
+        transition: filter 0.2s;
+
+        &:hover {
+            filter: brightness(0.7);
+        }
+    }
+}
+
+.posts {
+    margin-top: 1rem;
+
+    a {
+        display: block;
+        cursor: pointer;
+
+        & + a {
+            margin-top: 3rem;
+        }
+
+        &:hover {
+            strong {
+                color: var(--pink-500);
+            }
+        }
+
+        
+    }
+}
