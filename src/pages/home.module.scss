@@ -15,6 +15,32 @@
             filter: brightness(0.7);
         }
     }
+
+    aside {
+        margin-top: 4rem;
+        width: 100%;
+        padding: 1.125rem 0;
+        border-radius: 0.25rem;
+        cursor: pointer;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: var(--white);
+
+        a {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        transition: filter 0.2s;
+
+        &:hover {
+            filter: brightness(0.8)
+        }
+    }
 }
 
 .posts {
