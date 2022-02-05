@@ -62,6 +62,11 @@
             filter: brightness(0.8)
         }
     }
+
+}
+
+.comments {
+    margin-top: 5rem;
 }
 
 .other_posts {
@@ -73,12 +78,12 @@
     align-items: center;
     justify-content: space-between;
 
-    div {
+    a {
         display: flex;
         flex-direction: column;
         cursor: pointer;
 
-        & + div {
+        & + a {
             text-align: right;
         }
         

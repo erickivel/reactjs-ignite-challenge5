@@ -14,8 +14,10 @@ import Header from '../../components/Header';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import { useUtterances } from '../../hooks/useUtterances';
 
 interface Post {
+  uid: string;
   first_publication_date: string | null;
   last_publication_date: string | null;
   data: {
@@ -33,12 +35,25 @@ interface Post {
   };
 }
 
+interface OtherPosts {
+  uid: string;
+  first_publication_date: string | null;
+  title: string
+}
+
 interface PostProps {
   post: Post;
   preview: boolean;
+  previousPost: OtherPosts | null;
+  nextPost: OtherPosts | null;
 }
 
-export default function Post({ post, preview }: PostProps): JSX.Element {
+export default function Post({
+  post,
+  preview,
+  previousPost,
+  nextPost
+}: PostProps): JSX.Element {
   const router = useRouter();
 
   let formattedPostDate: string;
@@ -83,6 +98,11 @@ export default function Post({ post, preview }: PostProps): JSX.Element {
       }
     )
     : null;
+
+
+  // Comments Section With Uterrances
+  const commentNodeId = 'comments';
+  useUtterances(commentNodeId);
 
   return (
     <>
@@ -130,24 +150,41 @@ export default function Post({ post, preview }: PostProps): JSX.Element {
               </section>
             ))}
 
-            <footer className={styles.other_posts}>
-              <div>
-                <p>Como utilizar Hooks</p>
-                <strong>Post anterior</strong>
-              </div>
-              <div>
-                <p>Criando um app CRA do Zero</p>
-                <strong>Próximo post</strong>
-              </div>
-            </footer>
+            {(previousPost || nextPost) && (
+              <footer className={styles.other_posts}>
+                {previousPost ? (
+                  <Link href={`/post/${previousPost.uid}`} passHref >
+                    <a>
+                      <p>{previousPost.title}</p>
+                      <strong>Post anterior</strong>
+                    </a>
+                  </Link>
+                ) : (
+                  // To put the next post div to the side
+                  <div />
+                )}
+                {nextPost && (
+                  <Link href={`/post/${nextPost.uid}`} passHref >
+                    <a>
+                      <p>{nextPost.title}</p>
+                      <strong>Próximo post</strong>
+                    </a>
+                  </Link>
+                )}
+              </footer>
+            )}
+
+
 
             {preview && (
-              <aside>
-                <Link href="/api/exit-preview">
+              <Link href="/api/exit-preview">
+                <aside>
                   <a>Sair do modo Preview</a>
-                </Link>
-              </aside>
+                </aside>
+              </Link>
             )}
+
+            <div id={commentNodeId} className={styles.comments} />
           </main>
         </>
       )}
@@ -179,31 +216,61 @@ export const getStaticProps: GetStaticProps = async ({
   const slug = String(params.slug);
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', slug, {
-    ref: previewData?.ref ?? null,
-  });
+  const postsResponse = await prismic.query(
+    [Prismic.predicates.at('document.type', 'posts')],
+    {
+      orderings: '[document.first_publication_date desc]',
+      ref: previewData?.ref ?? null,
+    }
+  );
 
-  console.log(response);
+  const currentPostIndex = postsResponse.results.findIndex(p => p.uid === slug);
+
+  const currentPost = postsResponse.results[currentPostIndex];
 
   const post = {
-    first_publication_date: response.first_publication_date,
-    last_publication_date: response?.last_publication_date,
-    uid: response.uid,
+    first_publication_date: currentPost.first_publication_date,
+    last_publication_date: currentPost?.last_publication_date,
+    uid: currentPost.uid,
     data: {
-      title: response.data.title,
-      subtitle: response.data.subtitle,
+      title: currentPost.data.title,
+      subtitle: currentPost.data.subtitle,
       banner: {
-        url: response.data.banner.url,
+        url: currentPost.data.banner.url,
       },
-      author: response.data.author,
-      content: response.data.content,
+      author: currentPost.data.author,
+      content: currentPost.data.content,
     },
   };
+
+
+  // The lower the index more recent is the post
+  const otherPosts = [
+    ...postsResponse.results.map(p => {
+      return {
+        uid: p.uid,
+        first_publication_date: p.first_publication_date,
+        title: p.data.title
+      };
+    }),
+  ];
+
+
+
+  const previousPost = otherPosts[currentPostIndex + 1]
+    ? otherPosts[currentPostIndex + 1]
+    : null;
+
+  const nextPost = otherPosts[currentPostIndex - 1]
+    ? otherPosts[currentPostIndex - 1]
+    : null;
 
   return {
     props: {
       post,
       preview,
+      previousPost,
+      nextPost,
     },
   };
 };
